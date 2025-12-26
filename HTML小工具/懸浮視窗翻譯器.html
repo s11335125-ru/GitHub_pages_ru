@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英中翻譯器 - 獨立視窗</title>
+    <style>
+        :root { --primary:#667eea; --secondary:#764ba2; --danger:#ff6b6b; }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255,255,255,0.95);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .container h1 { color: var(--primary); margin-bottom: 20px; }
+        .container p { color: #666; margin-bottom: 24px; font-size: 16px; }
+        .btn-launch {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-launch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* 迷你視窗樣式 */
+        .pip-panel {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+        }
+        .pip-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 12px 12px 0 0;
+        }
+        .pip-title { font-weight: 700; font-size: 14px; }
+        .pip-close {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .pip-body {
+            padding: 16px;
+            background: #fff;
+        }
+        .pip-label { display: block; margin-bottom: 6px; color: #333; font-weight: 600; font-size: 13px; text-align: left; }
+        .pip-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            resize: vertical;
+        }
+        .pip-textarea:focus { outline: none; border-color: var(--primary); }
+        .pip-controls {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .pip-select, .pip-input {
+            padding: 8px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+            flex: 1;
+        }
+        .pip-select:focus, .pip-input:focus { outline: none; border-color: var(--primary); }
+        .pip-button {
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .pip-btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+        }
+        .pip-btn-gray {
+            background: #f0f0f0;
+            color: #444;
+        }
+        .pip-result {
+            background: #f8f9fa;
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 10px;
+            min-height: 60px;
+            margin-top: 10px;
+        }
+        .pip-result-title { color: var(--primary); font-weight: 700; font-size: 12px; margin-bottom: 6px; }
+        .pip-result-text { color: #222; line-height: 1.5; font-size: 13px; }
+        .pip-history {
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            margin-top: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .pip-history-title { font-weight: 700; color: var(--primary); font-size: 12px; margin-bottom: 8px; }
+        .pip-history-item {
+            background: #f8f9fa;
+            border-left: 3px solid var(--primary);
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .pip-history-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .pip-empty { text-align: center; color: #888; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 英中翻譯器</h1>
+        <p>點擊下方按鈕開啟獨立翻譯視窗（Always-on-top）</p>
+        <button class="btn-launch" id="launchBtn">🚀 開啟翻譯視窗</button>
+        <p style="font-size: 12px; color: #999; margin-top: 16px;">
+            💡 提示：需要 Chrome 115+ 或 Edge 115+ 瀏覽器<br>
+            視窗將始終保持在所有應用程式之上
+        </p>
+    </div>
+
+    <script>
+        const HISTORY_KEY = 'translationHistory';
+        const MAX_HISTORY = 100;
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function saveHistory(original, translation, direction) {
+            let list = [];
+            try { list = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]') } catch {}
+            const rec = { id: Date.now(), original, translation, direction, ts: new Date().toLocaleString('zh-TW') };
+            list.unshift(rec);
+            if (list.length > MAX_HISTORY) list = list.slice(0, MAX_HISTORY);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+            return rec;
+        }
+
+        function getHistory() {
+            try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]') } catch { return [] }
+        }
+
+        async function translateText(text, direction) {
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${direction}`;
+            try {
+                const resp = await fetch(url);
+                const data = await resp.json();
+                if (data.responseStatus === 200) {
+                    return data.responseData?.translatedText || text;
+                }
+            } catch {}
+            // 簡易本地備援
+            const dict = { 'hello':'你好', 'world':'世界', 'thank you':'謝謝', 'goodbye':'再見', '是的':'yes', '不':'no' };
+            return dict[text.toLowerCase()] || text;
+        }
+
+        async function launchPiP() {
+            if (!('documentPictureInPicture' in window)) {
+                alert('您的瀏覽器版本過低。請使用 Chrome 115+ 或 Microsoft Edge 115+');
+                return;
+            }
+
+            try {
+                const pipWin = await window.documentPictureInPicture.requestWindow({
+                    width: 380,
+                    height: 600
+                });
+
+                pipWin.document.body.style.margin = '0';
+                pipWin.document.body.style.padding = '0';
+                pipWin.document.body.style.background = '#fff';
+
+                const html = `
+                    <div class="pip-panel" style="height:100%; display:flex; flex-direction:column; font-family:Arial,'Microsoft JhengHei'; padding:12px;">
+                        <div class="pip-header">
+                            <span class="pip-title">🌐 英中翻譯器 (Always-on-top)</span>
+                            <button class="pip-close" id="closeBtn">✕ 關閉</button>
+                        </div>
+                        <div class="pip-body" style="flex:1; overflow-y:auto;">
+                            <label class="pip-label">翻譯方向：</label>
+                            <div class="pip-controls" style="margin-bottom:12px;">
+                                <select id="direction" class="pip-select">
+                                    <option value="en|zh-TW">英 → 中</option>
+                                    <option value="zh-TW|en">中 → 英</option>
+                                </select>
+                            </div>
+
+                            <label class="pip-label">輸入文字：</label>
+                            <textarea id="inputText" class="pip-textarea" placeholder="輸入英文或中文…（Enter 翻譯）"></textarea>
+
+                            <div class="pip-controls">
+                                <button id="translateBtn" class="pip-button pip-btn-primary">翻譯</button>
+                                <button id="clearBtn" class="pip-button pip-btn-gray">清除</button>
+                            </div>
+
+                            <div class="pip-result">
+                                <div class="pip-result-title">翻譯結果</div>
+                                <div id="resultText" class="pip-result-text">等待翻譯…</div>
+                            </div>
+
+                            <div class="pip-history">
+                                <div class="pip-history-title">📚 查詢歷史</div>
+                                <div id="historyList"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                pipWin.document.body.innerHTML = html;
+
+                // 建立 style 元素
+                const style = pipWin.document.createElement('style');
+                style.textContent = `
+                    :root { --primary:#667eea; --secondary:#764ba2; --danger:#ff6b6b; }
+                    * { box-sizing: border-box; margin: 0; padding: 0; }
+                    .pip-panel { font-family: 'Microsoft JhengHei', Arial, sans-serif; }
+                    .pip-header {
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: #fff;
+                        padding: 12px 16px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-radius: 12px 12px 0 0;
+                    }
+                    .pip-title { font-weight: 700; font-size: 14px; }
+                    .pip-close {
+                        background: rgba(255,255,255,0.2);
+                        border: none;
+                        color: #fff;
+                        cursor: pointer;
+                        padding: 4px 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                    }
+                    .pip-close:hover { background: rgba(255,255,255,0.3); }
+                    .pip-body {
+                        padding: 16px;
+                        background: #fff;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 12px;
+                    }
+                    .pip-label { color: #333; font-weight: 600; font-size: 13px; }
+                    .pip-textarea {
+                        width: 100%;
+                        min-height: 80px;
+                        padding: 10px;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 8px;
+                        font-family: Arial, sans-serif;
+                        font-size: 13px;
+                        resize: vertical;
+                    }
+                    .pip-textarea:focus { outline: none; border-color: #667eea; }
+                    .pip-controls {
+                        display: flex;
+                        gap: 8px;
+                    }
+                    .pip-select {
+                        padding: 8px;
+                        border: 2px solid #e5e7eb;
+                        border-radius: 6px;
+                        font-size: 13px;
+                        flex: 1;
+                    }
+                    .pip-select:focus { outline: none; border-color: #667eea; }
+                    .pip-button {
+                        border: none;
+                        padding: 8px 12px;
+                        border-radius: 6px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        font-size: 13px;
+                    }
+                    .pip-btn-primary {
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: #fff;
+                    }
+                    .pip-btn-gray {
+                        background: #f0f0f0;
+                        color: #444;
+                    }
+                    .pip-result {
+                        background: #f8f9fa;
+                        border-left: 4px solid #667eea;
+                        border-radius: 8px;
+                        padding: 10px;
+                        min-height: 60px;
+                    }
+                    .pip-result-title { color: #667eea; font-weight: 700; font-size: 12px; margin-bottom: 6px; }
+                    .pip-result-text { color: #222; line-height: 1.5; font-size: 13px; word-wrap: break-word; }
+                    .pip-history {
+                        border-top: 1px solid #eee;
+                        padding-top: 10px;
+                        max-height: 150px;
+                        overflow-y: auto;
+                    }
+                    .pip-history-title { font-weight: 700; color: #667eea; font-size: 12px; margin-bottom: 8px; }
+                    .pip-history-item {
+                        background: #f8f9fa;
+                        border-left: 3px solid #667eea;
+                        padding: 8px;
+                        margin-bottom: 6px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 12px;
+                        transition: box-shadow 0.2s;
+                    }
+                    .pip-history-item:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+                    .pip-empty { text-align: center; color: #888; font-size: 12px; }
+                `;
+                pipWin.document.head.appendChild(style);
+
+                // 渲染歷史
+                function renderHistory() {
+                    const box = pipWin.document.getElementById('historyList');
+                    const list = getHistory();
+                    if (!list.length) { box.innerHTML = '<div class="pip-empty">尚無查詢記錄</div>'; return; }
+                    box.innerHTML = list.slice(0, 20).map(r => `
+                        <div class="pip-history-item" data-id="${r.id}">
+                            <strong>${escapeHtml(r.original.substring(0, 30))}</strong><br>
+                            <span style="color:#666">${escapeHtml(r.translation.substring(0, 30))} (${r.ts})</span>
+                        </div>
+                    `).join('');
+                    box.querySelectorAll('.pip-history-item').forEach(el => {
+                        el.onclick = () => {
+                            const id = el.getAttribute('data-id');
+                            const rec = list.find(x => x.id == id);
+                            if (rec) {
+                                pipWin.document.getElementById('inputText').value = rec.original;
+                                pipWin.document.getElementById('direction').value = rec.direction;
+                                pipWin.document.getElementById('resultText').textContent = rec.translation;
+                            }
+                        };
+                    });
+                }
+
+                // 翻譯函數
+                async function handleTranslate() {
+                    const input = pipWin.document.getElementById('inputText').value.trim();
+                    const dir = pipWin.document.getElementById('direction').value;
+                    const out = pipWin.document.getElementById('resultText');
+                    if (!input) { out.textContent = '請輸入文字'; return; }
+                    out.textContent = '翻譯中…';
+                    try {
+                        const result = await translateText(input, dir);
+                        out.textContent = result;
+                        saveHistory(input, result, dir);
+                        renderHistory();
+                    } catch (e) {
+                        out.textContent = '翻譯失敗';
+                    }
+                }
+
+                pipWin.document.getElementById('translateBtn').onclick = handleTranslate;
+                pipWin.document.getElementById('clearBtn').onclick = () => {
+                    pipWin.document.getElementById('inputText').value = '';
+                    pipWin.document.getElementById('resultText').textContent = '等待翻譯…';
+                };
+                pipWin.document.getElementById('closeBtn').onclick = () => pipWin.close();
+
+                pipWin.document.getElementById('inputText').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleTranslate(); }
+                });
+
+                renderHistory();
+
+            } catch (e) {
+                alert('開啟失敗：' + e.message + '\n\n請確保使用 Chrome 115+ 或 Edge 115+');
+            }
+        }
+
+        document.getElementById('launchBtn').onclick = launchPiP;
+
+        // 如果瀏覽器不支援 PiP，自動禁用按鈕
+        if (!('documentPictureInPicture' in window)) {
+            document.getElementById('launchBtn').disabled = true;
+            document.getElementById('launchBtn').textContent = '❌ 您的瀏覽器不支援 (需 Chrome 115+)';
+        }
+    </script>
+</body>
+</html>

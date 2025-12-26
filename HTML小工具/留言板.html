@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .message-form {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .messages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .message-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .message-author {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .message-time {
+            color: #999;
+            font-size: 0.85em;
+        }
+
+        .message-content {
+            margin: 15px 0;
+            color: #333;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .action-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .like-btn.liked {
+            color: #e74c3c;
+        }
+
+        .reply-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            display: none;
+        }
+
+        .reply-section.active {
+            display: block;
+        }
+
+        .reply-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .reply-input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .reply-submit {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .reply-submit:hover {
+            background: #5568d3;
+        }
+
+        .replies-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .reply-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .reply-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .reply-author {
+            font-weight: bold;
+            color: #764ba2;
+            font-size: 0.95em;
+        }
+
+        .reply-time {
+            color: #999;
+            font-size: 0.8em;
+        }
+
+        .reply-content {
+            color: #555;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .no-messages {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            color: #999;
+            font-size: 1.1em;
+        }
+
+        .delete-btn {
+            color: #e74c3c;
+            margin-left: auto;
+        }
+
+        .delete-btn:hover {
+            background: #fee;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .message-form,
+            .message-card {
+                padding: 15px;
+            }
+
+            .message-actions {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💬 留言板</h1>
+        
+        <div class="message-form">
+            <div class="form-group">
+                <label for="nickname">暱稱：</label>
+                <input type="text" id="nickname" placeholder="請輸入您的暱稱" required>
+            </div>
+            <div class="form-group">
+                <label for="message">留言內容：</label>
+                <textarea id="message" placeholder="請輸入留言內容..." required></textarea>
+            </div>
+            <button class="submit-btn" onclick="submitMessage()">發送留言</button>
+        </div>
+
+        <div id="messagesList" class="messages-list">
+            <!-- 留言将在这里显示 -->
+        </div>
+    </div>
+
+    <script>
+        // 初始化留言数据
+        let messages = JSON.parse(localStorage.getItem('messages')) || [];
+
+        // 页面加载时显示所有留言
+        window.onload = function() {
+            displayMessages();
+        };
+
+        // 提交留言
+        function submitMessage() {
+            const nickname = document.getElementById('nickname').value.trim();
+            const messageContent = document.getElementById('message').value.trim();
+
+            if (!nickname) {
+                alert('請輸入暱稱！');
+                return;
+            }
+
+            if (!messageContent) {
+                alert('請輸入留言內容！');
+                return;
+            }
+
+            const newMessage = {
+                id: Date.now(),
+                nickname: nickname,
+                content: messageContent,
+                time: new Date().toLocaleString('zh-TW'),
+                likes: 0,
+                replies: []
+            };
+
+            messages.unshift(newMessage);
+            saveMessages();
+            displayMessages();
+
+            // 清空表单
+            document.getElementById('message').value = '';
+            
+            // 可选：显示成功提示
+            showNotification('留言發送成功！');
+        }
+
+        // 显示所有留言
+        function displayMessages() {
+            const messagesList = document.getElementById('messagesList');
+            
+            if (messages.length === 0) {
+                messagesList.innerHTML = '<div class="no-messages">還沒有留言，快來搶沙發吧！</div>';
+                return;
+            }
+
+            messagesList.innerHTML = messages.map(msg => `
+                <div class="message-card">
+                    <div class="message-header">
+                        <span class="message-author">${escapeHtml(msg.nickname)}</span>
+                        <span class="message-time">${msg.time}</span>
+                    </div>
+                    <div class="message-content">${escapeHtml(msg.content)}</div>
+                    <div class="message-actions">
+                        <button class="action-btn like-btn ${msg.liked ? 'liked' : ''}" onclick="toggleLike(${msg.id})">
+                            ${msg.liked ? '❤️' : '🤍'} 按讚 (${msg.likes})
+                        </button>
+                        <button class="action-btn" onclick="toggleReplySection(${msg.id})">
+                            💬 回復 (${msg.replies.length})
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteMessage(${msg.id})">
+                            🗑️ 刪除
+                        </button>
+                    </div>
+                    <div class="reply-section" id="reply-${msg.id}">
+                        <div class="reply-form">
+                            <input type="text" class="reply-input" id="reply-input-${msg.id}" placeholder="輸入回復內容...">
+                            <button class="reply-submit" onclick="submitReply(${msg.id})">回復</button>
+                        </div>
+                        <div class="replies-list">
+                            ${msg.replies.map(reply => `
+                                <div class="reply-item">
+                                    <div class="reply-header">
+                                        <span class="reply-author">${escapeHtml(reply.nickname)}</span>
+                                        <span class="reply-time">${reply.time}</span>
+                                    </div>
+                                    <div class="reply-content">${escapeHtml(reply.content)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 切换点赞
+        function toggleLike(messageId) {
+            const message = messages.find(msg => msg.id === messageId);
+            if (message) {
+                if (message.liked) {
+                    message.likes--;
+                    message.liked = false;
+                } else {
+                    message.likes++;
+                    message.liked = true;
+                }
+                saveMessages();
+                displayMessages();
+            }
+        }
+
+        // 切换回复区域显示
+        function toggleReplySection(messageId) {
+            const replySection = document.getElementById(`reply-${messageId}`);
+            replySection.classList.toggle('active');
+        }
+
+        // 提交回复
+        function submitReply(messageId) {
+            const nickname = document.getElementById('nickname').value.trim();
+            const replyInput = document.getElementById(`reply-input-${messageId}`);
+            const replyContent = replyInput.value.trim();
+
+            if (!nickname) {
+                alert('請先在上方輸入您的暱稱！');
+                return;
+            }
+
+            if (!replyContent) {
+                alert('請輸入回復內容！');
+                return;
+            }
+
+            const message = messages.find(msg => msg.id === messageId);
+            if (message) {
+                const newReply = {
+                    nickname: nickname,
+                    content: replyContent,
+                    time: new Date().toLocaleString('zh-TW')
+                };
+                message.replies.push(newReply);
+                saveMessages();
+                displayMessages();
+                
+                // 重新显示回复区域
+                setTimeout(() => {
+                    document.getElementById(`reply-${messageId}`).classList.add('active');
+                }, 0);
+
+                showNotification('回復成功！');
+            }
+        }
+
+        // 删除留言
+        function deleteMessage(messageId) {
+            if (confirm('確定要刪除這條留言嗎？')) {
+                messages = messages.filter(msg => msg.id !== messageId);
+                saveMessages();
+                displayMessages();
+                showNotification('留言已刪除');
+            }
+        }
+
+        // 保存到本地存储
+        function saveMessages() {
+            localStorage.setItem('messages', JSON.stringify(messages));
+        }
+
+        // HTML 转义（防止 XSS 攻击）
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 显示通知
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #667eea;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                z-index: 1000;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
