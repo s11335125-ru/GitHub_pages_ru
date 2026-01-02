@@ -1,11 +1,311 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-    <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>範例網頁</title>
-    <link rel="stylesheet" href="styles.css">
-    </head>
-    <body>
-    <h1>歡迎來到我的網站</h1>
-    <p>這是一個簡單的範例網頁。</p>
+    <title>我的程式集合</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 30px 20px;
+            color: white;
+            text-align: center;
+            border-bottom: 3px solid white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 0;
+            min-height: calc(100vh - 150px);
+            max-width: 100%;
+        }
+
+        /* 侧边栏导航 */
+        .sidebar {
+            background: white;
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+        }
+
+        .sidebar h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .nav-list {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin: 10px 0;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 12px 15px;
+            background: #f0f0f0;
+            color: #333;
+            text-decoration: none;
+            border-radius: 8px;
+            border-left: 4px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-link:hover {
+            background: #e0e0e0;
+            border-left-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .nav-link.active {
+            background: #667eea;
+            color: white;
+            border-left-color: #764ba2;
+        }
+
+        /* 主要内容区 */
+        .main-content {
+            background: white;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .content-section {
+            display: none;
+            padding: 0;
+            height: 100%;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .tool-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 欢迎页面 */
+        .welcome-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .welcome-section h2 {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .welcome-section p {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .tool-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .tool-card h3 {
+            margin-bottom: 10px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 10px;
+                padding: 15px;
+            }
+
+            .sidebar h2 {
+                grid-column: 1 / -1;
+            }
+
+            .nav-list {
+                display: contents;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .welcome-section {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .tool-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-link {
+                padding: 10px 12px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 页面头部 -->
+    <div class="header">
+        <h1>🚀 我的程式集合</h1>
+        <p>展示我创建的各种实用工具</p>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 侧边栏导航 -->
+        <div class="sidebar">
+            <h2>📋 工具列表</h2>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a class="nav-link active" onclick="showSection('welcome')">🏠 首頁</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('guestbook')">💬 留言板</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" onclick="showSection('translator')">🌐 懸浮視窗翻譯器</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主要内容区 -->
+        <div class="main-content">
+            <!-- 欢迎页面 -->
+            <div class="content-section active" id="welcome">
+                <div class="welcome-section">
+                    <h2>👋 歡迎來到我的程式集合</h2>
+                    <p>這是一個展示我創建的各種實用工具的網站。</p>
+                    <p>請從左側菜單中選擇一個工具來開始使用。</p>
+                    
+                    <div class="tool-grid">
+                        <div class="tool-card" onclick="showSection('guestbook')">
+                            <h3>💬 留言板</h3>
+                            <p>與訪客互動，留言和回復。</p>
+                        </div>
+                        <div class="tool-card" onclick="showSection('translator')">
+                            <h3>🌐 翻譯器</h3>
+                            <p>懸浮視窗翻譯器工具。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 留言板 -->
+            <div class="content-section" id="guestbook">
+                <iframe class="tool-frame" src="HTML小工具/留言板.html"></iframe>
+            </div>
+
+            <!-- 翻译器 -->
+            <div class="content-section" id="translator">
+                <iframe class="tool-frame" src="HTML小工具/懸浮視窗翻譯器.html"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 显示指定的内容区域
+        function showSection(sectionId) {
+            // 隐藏所有内容区
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // 移除所有导航链接的活动状态
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // 显示指定的内容区
+            const activeSection = document.getElementById(sectionId);
+            if (activeSection) {
+                activeSection.classList.add('active');
+            }
+
+            // 添加活动状态到对应的导航链接
+            event.target.classList.add('active');
+
+            // 保存用户的选择到本地存储
+            localStorage.setItem('lastSection', sectionId);
+        }
+
+        // 页面加载时恢复用户上次的选择
+        window.addEventListener('load', function() {
+            const lastSection = localStorage.getItem('lastSection');
+            if (lastSection && document.getElementById(lastSection)) {
+                showSection(lastSection);
+            }
+        });
+    </script>
+</body>
+</html>
